@@ -34,11 +34,6 @@ jobs:
         with:
           name: build-output
           path: ./dist/exPipeline
-       - name: Archive the build binary
-        uses: actions/upload-artifact@v3
-        with:
-          name: exePipeline-binary
-          path: exePipeline
 
   test:
     name: Test
