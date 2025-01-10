@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - "v*.*.*" # Trigger pour les releases via tags
   pull_request:
     branches:
       - main
@@ -25,7 +27,18 @@ jobs:
         run: go mod tidy
 
       - name: Build the project
-        run: go build -v ./...
+        run: go build -v -o ./dist/exPipeline ./...
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-output
+          path: ./dist/exPipeline
+       - name: Archive the build binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: exePipeline-binary
+          path: exePipeline
 
   test:
     name: Test
@@ -103,7 +116,7 @@ jobs:
 
       - name: Run Gosec
         run: |
-          gosec ./... > gosec_report.txt || true  # La commande gosec scanne le projet et enregistre le rapport.
+          gosec ./... > gosec_report.txt || true  # Scanne le projet et enregistre le rapport.
 
       - name: Archive Gosec report
         run: tar -czvf gosec_report.tar.gz gosec_report.txt
@@ -113,3 +126,23 @@ jobs:
         with:
           name: gosec-report
           path: gosec_report.tar.gz
+
+  release:
+    name: Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: build-output
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
