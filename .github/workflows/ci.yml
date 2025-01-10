@@ -123,7 +123,7 @@ jobs:
           path: gosec_report.tar.gz
 
   deploy:
-    name: Release
+    name: deploy
     needs: build
     runs-on: ubuntu-latest
     steps:
