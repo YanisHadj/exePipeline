@@ -59,26 +59,26 @@ jobs:
           go test -coverprofile=coverage.out ./...
           go tool cover -func=coverage.out
 
-  package:
-    name: Package
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+  document:
+  name: Document with Godoc
+  runs-on: ubuntu-latest
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: 1.23.4
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: 1.23.4
 
-      - name: Build executable
-        run: go build -o exPipeline .
-
-      - name: Archive executable
-        run: tar -czvf exPipeline.tar.gz exPipeline
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: exPipeline
-          path: exPipeline.tar.gz
+    - name: Generate documentation with Godoc
+      run: |
+        godoc -http=:6060 &  # Lance le serveur godoc en arrière-plan
+        sleep 10  # Attendre quelques secondes que le serveur démarre
+        curl http://localhost:6060/pkg/ > godoc.html  # Récupère la documentation générée
+        mv godoc.html $GITHUB_WORKSPACE/godoc.html  # Déplace la documentation dans le bon répertoire
+    - name: Upload generated documentation
+      uses: actions/upload-artifact@v3
+      with:
+        name: godoc-html
+        path: godoc.html
