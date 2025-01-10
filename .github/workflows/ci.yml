@@ -60,25 +60,30 @@ jobs:
           go tool cover -func=coverage.out
 
   document:
-  name: Document with Godoc
-  runs-on: ubuntu-latest
-  steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+    name: Document with Godoc
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: 1.23.4
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.23.4
 
-    - name: Generate documentation with Godoc
-      run: |
-        godoc -http=:6060 &  # Lance le serveur godoc en arrière-plan
-        sleep 10  # Attendre quelques secondes que le serveur démarre
-        curl http://localhost:6060/pkg/ > godoc.html  # Récupère la documentation générée
-        mv godoc.html $GITHUB_WORKSPACE/godoc.html  # Déplace la documentation dans le bon répertoire
-    - name: Upload generated documentation
-      uses: actions/upload-artifact@v3
-      with:
-        name: godoc-html
-        path: godoc.html
+      - name: Install Godoc
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y golang-doc
+
+      - name: Generate documentation with Godoc
+        run: godoc -http=:6060 & sleep 5 && curl http://localhost:6060/pkg/ > godoc_output.html
+
+      - name: Archive documentation
+        run: tar -czvf godoc_output.tar.gz godoc_output.html
+
+      - name: Upload documentation artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: godoc-output
+          path: godoc_output.tar.gz
