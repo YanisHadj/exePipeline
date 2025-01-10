@@ -84,3 +84,32 @@ jobs:
         with:
           name: godoc-output
           path: godoc_output.tar.gz
+
+  security:
+    name: Security Scan with Gosec
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.23.4
+
+      - name: Install Gosec
+        run: |
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
+
+      - name: Run Gosec
+        run: |
+          gosec ./... > gosec_report.txt || true  # La commande gosec scanne le projet et enregistre le rapport.
+
+      - name: Archive Gosec report
+        run: tar -czvf gosec_report.tar.gz gosec_report.txt
+
+      - name: Upload Gosec report artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: gosec-report
+          path: gosec_report.tar.gz
